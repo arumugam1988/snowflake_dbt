@@ -1,0 +1,12 @@
+version: 2
+
+sources:
+  - name: retail_source
+    database: DEV_DBT_DB
+    schema: PUBLIC
+    tables:
+      - name: CUSTOMERS
+      - name: PRODUCTS
+      - name: ORDERS
+      - name: ORDER_ITEMS
+      - name: PAYMENTS
