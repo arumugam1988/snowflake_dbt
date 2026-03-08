@@ -1,14 +1,20 @@
- {% snapshot snap_dim_customers %}
+{% snapshot snap_dim_customers %}
 
 {{
     config(
         target_schema='snapshots',
         unique_key='customer_id',
         strategy='check',
-        check_cols=['first_name','last_name','email','phone_number','city']
+        check_cols=['full_name','email','city']
     )
 }}
 
-select * from {{ ref('dim_customers') }}
+SELECT
+customer_id,
+full_name,
+email,
+city,
+created_at
+FROM {{ ref('dim_customers') }}
 
 {% endsnapshot %}

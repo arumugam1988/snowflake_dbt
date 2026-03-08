@@ -1,33 +1,28 @@
-{{config(materialized='table')}}
+{{ config(
+    materialized='incremental',
+    unique_key='order_item_id',
+    incremental_strategy='merge'
+) }}
 
-select
-    oi.order_item_id,
-    oi.order_id,
-    o.order_dt,
-    o.order_status,
-
+SELECT
+    i.order_item_id,
+    o.order_id,
     o.customer_id,
-    p.product_id,
+    o.order_dt AS order_date,
+    i.product_id,
+    i.product_name,
+    i.quantity,
+    i.total_amount,
+    current_timestamp() AS dbt_created_at
+FROM {{ ref('stg_orders') }} o
+JOIN {{ ref('int_order_items_enriched') }} i
+    ON o.order_id = i.order_id
 
-    oi.quantity,
-    oi.total_amount,
+{% if is_incremental() %}
 
-    pay.payment_method,
-    pay.payment_status,
-    pay.pmt_date,
+WHERE o.order_dt >
+(
+    SELECT MAX(order_date) FROM {{ this }}
+)
 
-    current_timestamp() as dbt_created_at
-
-from {{ ref('stg_order_items') }} oi
-
-left join {{ ref('stg_orders') }} o
-    on oi.order_id = o.order_id
-
-left join {{ ref('dim_products') }} p
-    on oi.product_id = p.product_id
-
-left join {{ ref('dim_customers') }} c
-    on o.customer_id = c.customer_id
-
-left join {{ ref('stg_payments') }} pay
-    on oi.order_id = pay.order_id
+{% endif %}
